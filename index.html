@@ -1,59 +1,209 @@
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="UTF-8">
+	<title>Tennis</title>
+</head>
+<body>
+<canvas id = "gameCanvas" width="500" height="300">
+	
+</canvas>
 
-  <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Tennisgame : Tennisgame">
+<script type="text/javascript">
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+const ballWidth = 20;
+const WinScore = 3;
+var canvas;
+var canvasContext;
+var showWinnerScreen = false;
+var ballX = 250;
+var ballY = 250;
+var BallSpeedX = 7;
+var BallSpeedY = 5;
+var computerSpeed = 4;
+var ScoreLeft = 0;
+var ScoreRight = 0;
 
-    <title>Tennisgame</title>
-  </head>
+var tennisLeftY = 250;
+var tennisRightY = 100;
+var tennisLeftX;
+var tennisRightX;
+var tennisHeight = 80;
+var tennisWidth = 10;
+var border = 10;
 
-  <body>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/ruadmjn/tennisgame">View on GitHub</a>
+handleMouseClick = function(evt){
+	if(showWinnerScreen){
+		ScoreLeft = 0;
+		ScoreRight = 0;
+		showWinnerScreen = false;
+	}
+}
 
-          <h1 id="project_title">Tennisgame</h1>
-          <h2 id="project_tagline">Tennisgame</h2>
+window.onload = function() {
+	canvas = document.getElementById('gameCanvas');
+	canvasContext = canvas.getContext('2d');
+	var FPS = 30;
+	setInterval(callBoth, 1000/FPS);
+	canvas.addEventListener('mousemove', 
+		function(evt){
+			var mousePos = findMouse(evt);
+			tennisLeftY = mousePos.y-tennisHeight/2;
+		});
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/ruadmjn/tennisgame/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/ruadmjn/tennisgame/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
+	canvas.addEventListener('mousedown', handleMouseClick);
+}
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <p>Tennisgame</p>
 
-<h3>
-<a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+function callBoth(){
+	drawEverything();
+	moveEverything();
+} 
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor’s GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+function ballReset(){
 
-<h3>
-<a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+	if(ScoreLeft >= WinScore || ScoreRight >= WinScore){
+		showWinnerScreen = true;
+	}
 
-<p>Having trouble with Pages? Check out our <a href="https://help.github.com/pages">documentation</a> or <a href="https://github.com/contact">contact support</a> and we’ll help you sort it out.</p>
-      </section>
-    </div>
+	ballX = canvas.width/2;
+	ballY = canvas.height/2;
 
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Tennisgame maintained by <a href="https://github.com/ruadmjn">ruadmjn</a></p>
-        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
+}
 
-    
+function findMouse(evt){
+	var rect = canvas.getBoundingClientRect();
+	var root = document.documentElement;
+	var mouseX = evt.clientX - rect.left - root.scrollLeft;
+	var mouseY = evt.clientY - rect.top - root.scrollTop;
+	return {
+		x:mouseX,
+		y:mouseY
+	};
+}
 
-  </body>
+
+function drawNet(){
+	for (var i = 0; i <= canvas.height; i+=40) {
+		RectColor(canvas.width/2-1,i,2,20,'white');	
+	}
+}
+
+
+function computerMovement(){
+	if (tennisRightY+tennisHeight/2<ballY-ballWidth/2){
+		tennisRightY += computerSpeed;
+	}
+	if (tennisRightY+tennisHeight/2>ballY+ballWidth/2){
+		tennisRightY -= computerSpeed;
+	}
+}
+
+function moveEverything(){ 
+
+
+	if(showWinnerScreen){
+		return;
+	}
+
+
+	computerMovement();
+	ballX += BallSpeedX;
+	ballY += BallSpeedY;
+
+
+
+	//right loser
+	if (ballX>canvas.width-border-tennisWidth-ballWidth){
+		if(ballY>tennisRightY && ballY<tennisRightY+tennisHeight){
+				BallSpeedX = -BallSpeedX;
+		}
+		else{
+			BallSpeedX = -BallSpeedX;
+			ScoreLeft += 1;
+			ballReset();
+		}
+	}
+
+
+	//left loser
+	if (ballX<border+ballWidth){
+		if(ballY>tennisLeftY && ballY<tennisLeftY+tennisHeight){
+				BallSpeedX = -BallSpeedX;
+
+				var deltaY = ballY - tennisLeftY - tennisHeight/2;
+				BallSpeedY = deltaY * 0.35;
+
+		}
+		else{
+			BallSpeedX = -BallSpeedX;
+			ScoreRight += 1;
+			ballReset();
+		}
+	}
+
+	if (ballY>canvas.height-ballWidth/2){
+		BallSpeedY = -BallSpeedY;
+	}
+
+	if (ballY<ballWidth/2){
+		BallSpeedY = -BallSpeedY;
+	}
+
+
+}
+
+function RectColor(leftX, topY, width, height, color){ 
+	canvasContext.fillStyle = color;
+	canvasContext.fillRect(leftX, topY, width, height);
+}
+
+function drawCircle(CenterX, CenterY, radius, color){
+	canvasContext.fillStyle = color;
+	canvasContext.beginPath();
+	// the last are radian, PI, CW
+	canvasContext.arc(CenterX, CenterY, radius, 0, Math.PI*2, true);
+	canvasContext.fill();
+}
+
+function drawEverything(){ 
+	canvasContext.font="22px";
+
+
+	//draw the pane
+	RectColor(0,0, canvas.width, canvas.height, 'black');
+
+	canvasContext.fillStyle = 'white';
+	if(showWinnerScreen){
+		if (ScoreLeft>=WinScore){
+			canvasContext.fillText("Left Player won!", canvas.width/2-20, canvas.height/2-20);
+		}
+		if (ScoreRight>=WinScore){
+			canvasContext.fillText("Right Player won!", canvas.width/2-20, canvas.height/2-20);
+		}
+
+		canvasContext.fillText("Click to continue", canvas.width/2-20, canvas.height/2+20);
+		return;
+	}
+
+	drawNet();
+	//draw the ball
+	//RectColor(ballX, ballY, 20, 20, 'white');
+	//or draw circle
+	drawCircle(ballX, ballY, 10, 'white');
+
+	//draw the left paddle
+	RectColor(border, tennisLeftY, tennisWidth, tennisHeight, 'white');
+	//draw the right paddle
+	RectColor(canvas.width-border-tennisWidth, tennisRightY, tennisWidth, tennisHeight, 'white');
+
+	canvasContext.fillText(ScoreLeft, 20, 20);
+	canvasContext.fillText(ScoreRight, canvas.width-20, 20);
+}
+
+
+</script>
+
+</body>
 </html>
